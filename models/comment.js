@@ -3,7 +3,11 @@ const mongoose = require("mongoose");
 
 const CommentSchema = new mongoose.Schema({
     post: {
-        type: mongoose.Types.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+    },
+    postedBy: {
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
     text: {
@@ -19,11 +23,12 @@ const CommentSchema = new mongoose.Schema({
     },
 });
 
-const Comment = mongoose.model("Comment", PostSchema);
+const Comment = mongoose.model("Comment", CommentSchema);
 
 function validateComment(user) {
     const schema = Joi.object({
         post: Joi.objectId().required(),
+        postedBy: Joi.objectId().required(),
         text: Joi.string().min(1).max(255).required(),
         date: Joi.date(),
     });
