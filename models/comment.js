@@ -19,12 +19,12 @@ const CommentSchema = new mongoose.Schema({
     },
 });
 
-const Comment = mongoose.model("Post", PostSchema);
+const Comment = mongoose.model("Comment", PostSchema);
 
 function validateComment(user) {
     const schema = Joi.object({
         post: Joi.objectId().required(),
-        text: Joi.string().min(1).max(255).required,
+        text: Joi.string().min(1).max(255).required(),
         date: Joi.date(),
     });
     return schema.validate(user);

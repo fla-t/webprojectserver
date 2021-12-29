@@ -1,30 +1,18 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
-const CommentSchema = new mongoose.Schema({
-    post: {
+const FriendSchema = new mongoose.Schema({
+    user: {
         type: mongoose.Types.Schema.ObjectId,
         required: true,
     },
-    text: {
-        type: String,
-        min: 1,
-        max: 255,
+    friends: {
+        type: [mongoose.Types.Schema.ObjectId],
         required: true,
     },
 });
 
-const Comment = mongoose.model("Post", PostSchema);
+const Friend = mongoose.model("Friend", PostSchema);
 
-function validateComment(user) {
-    const schema = Joi.object({
-        post: Joi.objectId().required(),
-        text: Joi.string().min(1).max(255).required,
-        date: Joi.date(),
-    });
-    return schema.validate(user);
-}
-
-module.exports.Comment = Comment;
-module.exports.CommentSchema = CommentSchema;
-module.exports.validate = validateComment;
+module.exports.Friend = Friend;
+module.exports.FriendSchema = FriendSchema;
