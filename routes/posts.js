@@ -6,6 +6,7 @@ const auth = require("../middleware/auth");
 
 const { User } = require("../models/user");
 const { Post, validate } = require("../models/post");
+const { Like } = require("../models/like");
 
 router.post("/", auth, async (req, res) => {
     try {
@@ -26,6 +27,13 @@ router.post("/", auth, async (req, res) => {
             date: new Date(),
         });
 
+        let like = new Like({
+            post: post.id,
+            likedBy: [],
+        });
+
+        like.save();
+
         post = await post.save();
         res.send(post);
     } catch (err) {
@@ -34,7 +42,19 @@ router.post("/", auth, async (req, res) => {
     }
 });
 
-router.put("/", auth, async (req, res) => {
+router.get("/:id", async (req, res, next) => {
+    try {
+        let post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).send("Can't find Post!");
+
+        res.send(post);
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.put("/:id", auth, async (req, res) => {
     try {
         const token = req.header("x-auth-token");
 
@@ -44,10 +64,10 @@ router.put("/", auth, async (req, res) => {
         const { error } = validate(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        let post = await Post.findById(req.body._id);
+        let post = await Post.findById(req.params.id);
         if (!post) return res.status(400).send("Post not found!");
 
-        if (post.createdBy.toString() !== user.id)
+        if (post.postedBy.toString() !== user.id)
             return res
                 .status(400)
                 .send("You don't have permission to do that.");
@@ -96,6 +116,58 @@ router.delete("/", auth, async (req, res, next) => {
                     title: req.body.title,
                     text: req.body.text,
                     createdAt: new Date(),
+                },
+            }
+        );
+
+        res.status(200).send();
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+//
+// Likes stuff
+//
+
+router.get("/like/:id", auth, async (req, res) => {
+    try {
+        let user = await User.findById(req.user._id);
+        if (!user) return res.status(400).send("Can't find User!");
+
+        let post = await Post.findById(req.params.id);
+        if (!post) return res.status(400).send("Post not found!");
+
+        let like = await Like.findOneAndUpdate(
+            { post: post._id },
+            {
+                $push: {
+                    likedBy: req.user._id,
+                },
+            }
+        );
+
+        res.status(200).send();
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.get("/unlike/:id", auth, async (req, res) => {
+    try {
+        let user = await User.findById(req.user._id);
+        if (!user) return res.status(400).send("Can't find User!");
+
+        let post = await Post.findById(req.params.id);
+        if (!post) return res.status(400).send("Post not found!");
+
+        like = await Like.findOneAndUpdate(
+            { post: post.id },
+            {
+                $pull: {
+                    likedBy: req.user._id,
                 },
             }
         );

@@ -14,4 +14,3 @@ const Like = mongoose.model("Like", LikeSchema);
 
 module.exports.Like = Like;
 module.exports.LikeSchema = LikeSchema;
-module.exports.validate = validateLike;
