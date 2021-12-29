@@ -7,6 +7,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const config = require("config");
 const auth = require("../middleware/auth");
+
+const { Friend } = require("../models/friend");
 const { User, validate, validateCreds } = require("../models/user");
 
 router.post("/signup", async (req, res, next) => {
@@ -26,6 +28,14 @@ router.post("/signup", async (req, res, next) => {
                 "email",
             ])
         );
+
+        let friend = new Friend({
+            user: user.id,
+            friends: [],
+        });
+
+        friend.save();
+
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
         await user.save();

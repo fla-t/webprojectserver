@@ -5,6 +5,7 @@ const user = require("../routes/users");
 const post = require("../routes/posts");
 const like = require("../routes/likes");
 const comment = require("../routes/comments");
+const friend = require("../routes/friends");
 
 const error = require("../middleware/error");
 
@@ -15,5 +16,6 @@ module.exports = function (app) {
     app.use("/api/posts", post);
     app.use("/api/reacts", like);
     app.use("/api/comments", comment);
+    app.use("/api/friends", friend);
     app.use(error);
 };

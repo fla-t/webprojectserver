@@ -3,16 +3,16 @@ const mongoose = require("mongoose");
 
 const FriendSchema = new mongoose.Schema({
     user: {
-        type: mongoose.Types.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
     friends: {
-        type: [mongoose.Types.Schema.ObjectId],
+        type: [mongoose.Schema.Types.ObjectId],
         required: true,
     },
 });
 
-const Friend = mongoose.model("Friend", PostSchema);
+const Friend = mongoose.model("Friend", FriendSchema);
 
 module.exports.Friend = Friend;
 module.exports.FriendSchema = FriendSchema;

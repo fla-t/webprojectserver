@@ -5,22 +5,24 @@ const _ = require("lodash");
 const auth = require("../middleware/auth");
 
 const { User } = require("../models/user");
-const { Post } = require("../models/post");
-const { Like } = require("../models/like");
+const { Friend } = require("../models/friend");
 
-router.get("/like/:id", auth, async (req, res) => {
+router.get("/add/:id", auth, async (req, res) => {
     try {
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
 
-        let post = await Post.findById(req.params.id);
-        if (!post) return res.status(400).send("Post not found!");
+        let friend = await Friend.findOne({ user: user._id });
+        if (!friend) return res.status(400).send("User not found!");
 
-        let like = await Like.findOneAndUpdate(
-            { post: post._id },
+        let userToAdd = await User.findById(req.params.id);
+        if (!userToAdd) return res.status(400).send("Can't find User!");
+
+        friend = await Friend.findOneAndUpdate(
+            { user: user._id },
             {
                 $addToSet: {
-                    likedBy: req.user._id,
+                    friends: userToAdd._id,
                 },
             }
         );
@@ -32,19 +34,21 @@ router.get("/like/:id", auth, async (req, res) => {
     }
 });
 
-router.get("/unlike/:id", auth, async (req, res) => {
+router.get("/remove/:id", auth, async (req, res) => {
     try {
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
 
-        let post = await Post.findById(req.params.id);
-        if (!post) return res.status(400).send("Post not found!");
+        let friend = await Friend.findOne({ user: user._id });
+        if (!friend) return res.status(400).send("User not found!");
 
-        like = await Like.findOneAndUpdate(
-            { post: post.id },
+        let friendExists = await Friend.findOne({ friends: {} });
+
+        friend = await Friend.findOneAndUpdate(
+            { user: user._id },
             {
                 $pull: {
-                    likedBy: req.user._id,
+                    friends: userToAdd._id,
                 },
             }
         );
