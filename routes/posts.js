@@ -42,7 +42,7 @@ router.post("/", auth, async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", auth, async (req, res, next) => {
     try {
         let post = await Post.findById(req.params.id);
         if (!post) return res.status(404).send("Can't find Post!");
@@ -97,9 +97,6 @@ router.delete("/", auth, async (req, res, next) => {
 
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
-
-        const { error } = validate(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
 
         let post = await Post.findById(req.body._id);
         if (!post) return res.status(400).send("Post not found!");
