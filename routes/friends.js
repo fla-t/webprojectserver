@@ -18,11 +18,20 @@ router.get("/add/:id", auth, async (req, res) => {
         let userToAdd = await User.findById(req.params.id);
         if (!userToAdd) return res.status(400).send("Can't find User!");
 
-        friend = await Friend.findOneAndUpdate(
+        await Friend.findOneAndUpdate(
             { user: user._id },
             {
                 $addToSet: {
                     friends: userToAdd._id,
+                },
+            }
+        );
+
+        await Friend.findOneAndUpdate(
+            { user: userToAdd._id },
+            {
+                $addToSet: {
+                    friends: user._id,
                 },
             }
         );
@@ -42,13 +51,23 @@ router.get("/remove/:id", auth, async (req, res) => {
         let friend = await Friend.findOne({ user: user._id });
         if (!friend) return res.status(400).send("User not found!");
 
-        let friendExists = await Friend.findOne({ friends: {} });
+        let userToRemove = await User.findById(req.params.id);
+        if (!userToRemove) return res.status(400).send("Can't find User!");
 
-        friend = await Friend.findOneAndUpdate(
+        await Friend.findOneAndUpdate(
             { user: user._id },
             {
                 $pull: {
-                    friends: userToAdd._id,
+                    friends: userToRemove._id,
+                },
+            }
+        );
+
+        await Friend.findOneAndUpdate(
+            { user: userToRemove._id },
+            {
+                $pull: {
+                    friends: user._id,
                 },
             }
         );

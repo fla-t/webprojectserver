@@ -62,7 +62,7 @@ router.post("/signin", async (req, res, next) => {
 
         const token = {
             token: user.generateAuthToken(),
-            user: _.pick(user, ["firstname", "lastname", "email", "dob"]),
+            user: _.pick(user, ["id", "firstname", "lastname", "email", "dob"]),
         };
         res.send(token);
     } catch (err) {
