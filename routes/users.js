@@ -83,4 +83,32 @@ router.get("/:id", auth, async (req, res) => {
     }
 });
 
+router.put("/edit", auth, async (req, res) => {
+    try {
+        let user = await User.findById(req.user._id);
+        if (!user) return res.status(400).send("Can't find User!");
+
+        const { error } = validate(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
+
+        user = await User.findOneAndUpdate(
+            { id: user._id },
+            {
+                $set: {
+                    firstname: req.body.firstname,
+                    lastname: req.body.lastname,
+                    dob: req.body.dob,
+                    email: req.body.email,
+                    password: req.body.password,
+                },
+            }
+        );
+
+		res.send(post);
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
 module.exports = router;
