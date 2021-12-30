@@ -58,7 +58,7 @@ function validateUser(user) {
         dob: Joi.date().required(),
         email: Joi.string().min(5).max(255).required().email(),
         password: Joi.string().min(5).max(255).required(),
-        bio: Joi.string().min(5).max(255),
+        bio: Joi.string().min(0).max(255),
         // avatar: Joi.string().required(),
     });
     return schema.validate(user);
