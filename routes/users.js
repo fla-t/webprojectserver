@@ -1,12 +1,14 @@
 var express = require("express");
 var router = express.Router();
 
-const mongoose = require("mongoose");
+const fs = require("fs");
+const path = require("path");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const config = require("config");
 const auth = require("../middleware/auth");
+const upload = require("../middleware/multer")(
+    "../public/uploads/profile_pictures/"
+);
 
 const { Friend } = require("../models/friend");
 const { User, validate, validateCreds } = require("../models/user");
@@ -75,7 +77,14 @@ router.get("/:id", auth, async (req, res) => {
     try {
         let user = await User.findById(req.params.id);
         if (!user) return res.status(404).send("User Doesn't Exists");
-        user = _.pick(user, ["id", "firstname", "lastname", "email", "dob"]);
+        user = _.pick(user, [
+            "id",
+            "firstname",
+            "lastname",
+            "email",
+            "dob",
+            "avatar",
+        ]);
         res.send(user);
     } catch (err) {
         console.log(err.message);
@@ -83,13 +92,27 @@ router.get("/:id", auth, async (req, res) => {
     }
 });
 
-router.put("/edit", auth, async (req, res) => {
+router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
     try {
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
 
         const { error } = validate(req.body);
         if (error) return res.status(400).send(error.details[0].message);
+
+        const salt = await bcrypt.genSalt(10);
+        req.body.password = await bcrypt.hash(req.body.password, salt);
+
+        if (req.file !== null) {
+            if (user.avatar !== undefined) {
+                fs.unlinkSync(
+                    path.join(
+                        __dirname,
+                        "../public/uploads/profile_pictures/" + user.avatar
+                    )
+                );
+            }
+        }
 
         user = await User.findOneAndUpdate(
             { id: user._id },
@@ -98,13 +121,15 @@ router.put("/edit", auth, async (req, res) => {
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,
                     dob: req.body.dob,
-                    email: req.body.email,
                     password: req.body.password,
+                    email: req.body.email,
+                    avatar: req.file ? req.file.filename : null,
                 },
-            }
+            },
+            { new: true }
         );
 
-		res.send(post);
+        res.send(user);
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);

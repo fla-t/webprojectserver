@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
         minLength: 5,
         maxLength: 255,
     },
+    avatar: {
+        type: String,
+        required: false,
+    },
 });
 
 userSchema.methods.generateAuthToken = function () {
