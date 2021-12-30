@@ -28,6 +28,8 @@ router.post("/signup", async (req, res, next) => {
                 "dob",
                 "password",
                 "email",
+                "avatar",
+                "bio",
             ])
         );
 
@@ -104,7 +106,7 @@ router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
         req.body.password = await bcrypt.hash(req.body.password, salt);
 
         if (req.file !== null) {
-            if (user.avatar !== undefined) {
+            if (user.avatar) {
                 fs.unlinkSync(
                     path.join(
                         __dirname,
@@ -121,8 +123,8 @@ router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,
                     dob: req.body.dob,
-                    password: req.body.password,
                     email: req.body.email,
+                    bio: req.body.bio,
                     avatar: req.file ? req.file.filename : null,
                 },
             },
