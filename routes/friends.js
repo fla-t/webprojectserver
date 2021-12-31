@@ -8,6 +8,34 @@ const { User } = require("../models/user");
 const { Friend } = require("../models/friend");
 const { Post } = require("../models/post");
 
+router.get("/check/:id", auth, async (req, res) => {
+    try {
+        let currentuser = await User.findById(req.user._id);
+        if (!currentuser) return res.status(400).send("Can't find User!");
+
+        let usertocheck = await User.findById(req.params.id);
+        if (!usertocheck)
+            return res.status(400).send("Can't find the second user");
+
+        let friendsCheck = await Friend.findOne({
+            $and: [
+                { user: currentuser._id },
+                { friends: { $in: usertocheck._id } },
+            ],
+        });
+
+        if (friendsCheck) return res.status(200).send();
+        else return res.status(400).send();
+
+        // if (friends.friends.include(usertocheck._id))
+        //     return res.status(200).send();
+        // else return res.status(400).send();
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
 router.get("/confirm/:id/", auth, async (req, res) => {
     try {
         let currentuser = await User.findById(req.user._id);
@@ -89,17 +117,23 @@ router.get("/remove/:id", auth, async (req, res) => {
         let userToRemove = await User.findById(req.params.id);
         if (!userToRemove) return res.status(400).send("Can't find User!");
 
-        await Friend.findByIdAndUpdate(user._id, {
-            $pull: {
-                friends: userToRemove._id,
-            },
-        });
+        await Friend.findOneAndUpdate(
+            { user: user._id },
+            {
+                $pull: {
+                    friends: userToRemove._id,
+                },
+            }
+        );
 
-        await Friend.findByIdAndUpdate(userToRemove._id, {
-            $pull: {
-                friends: user._id,
-            },
-        });
+        await Friend.findOneAndUpdate(
+            { user: userToRemove._id },
+            {
+                $pull: {
+                    friends: user._id,
+                },
+            }
+        );
 
         res.status(200).send();
     } catch (err) {
