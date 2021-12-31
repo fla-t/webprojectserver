@@ -12,6 +12,19 @@ const { User } = require("../models/user");
 const { Post, validate } = require("../models/post");
 const { Like } = require("../models/like");
 
+router.get("/user/:id", async (req, res) => {
+    try {
+        let postedByuser = await Post.find({
+            postedBy: req.params.id,
+        }).sort("-date");
+
+        res.send(postedByuser);
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
 router.post("/", [auth, upload.array("photos", 10)], async (req, res) => {
     try {
         const token = req.header("x-auth-token");
@@ -42,6 +55,18 @@ router.post("/", [auth, upload.array("photos", 10)], async (req, res) => {
 
         post = await post.save();
         res.send(post);
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.get("/", async (req, res) => {
+    try {
+        let posts = await Post.find({}).sort("-date");
+        if (!posts) return res.status(404).send("Can't find posts");
+
+        res.send(posts);
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);
@@ -129,6 +154,16 @@ router.delete("/", auth, async (req, res, next) => {
         post = await Post.findOneAndDelete({ id: post.id });
 
         res.status(200).send();
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+// posts done by the friends
+
+router.get("/friendposts", auth, async (req, res) => {
+    try {
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);

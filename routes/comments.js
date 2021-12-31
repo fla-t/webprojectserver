@@ -8,17 +8,30 @@ const { User } = require("../models/user");
 const { Post } = require("../models/post");
 const { Comment, validate } = require("../models/comment");
 
-router.post("/", auth, async (req, res) => {
+router.get("/:id", async (req, res) => {
+    try {
+        let comments = await Comment.find({
+            post: req.params.id,
+        }).sort("date");
+
+        res.send(comments);
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.post("/:id", auth, async (req, res) => {
     try {
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
 
         req.body.postedBy = req.user._id;
-
+        req.body.post = req.params.id;
         const { error } = validate(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        let post = await Post.findById(req.body.post);
+        let post = await Post.findById(req.params.id);
         if (!post) return res.status(400).send("Post not found!");
 
         let comment = new Comment({

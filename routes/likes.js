@@ -29,6 +29,20 @@ router.get("/like/:id", auth, async (req, res) => {
     }
 });
 
+router.get("/:id", async (req, res) => {
+    try {
+        console.log(req.params.id);
+        let likesObj = await Like.findOne({
+            post: req.params.id,
+        });
+
+        res.send(likesObj);
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
 router.get("/unlike/:id", auth, async (req, res) => {
     try {
         let user = await User.findById(req.user._id);

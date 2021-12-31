@@ -6,13 +6,14 @@ const auth = require("../middleware/auth");
 
 const { User } = require("../models/user");
 const { Friend } = require("../models/friend");
+const { Post } = require("../models/post");
 
 router.get("/confirm/:id/", auth, async (req, res) => {
     try {
         let currentuser = await User.findById(req.user._id);
-        if (!user) return res.status(400).send("Can't find User!");
+        if (!currentuser) return res.status(400).send("Can't find User!");
 
-        let friendObject = await Friend.findOne({ user: user._id });
+        let friendObject = await Friend.findOne({ user: currentuser._id });
         if (!friendObject) return res.status(400).send("User not found!");
 
         let userToAdd = await User.findById(req.params.id);
@@ -118,6 +119,26 @@ router.get("/user/:id", async (req, res) => {
         if (!friendsObject) return res.status(400).send("User not found!");
 
         res.send(friendsObject.friends);
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+// posts done by the friends and the person himself.
+router.get("/posts", auth, async (req, res) => {
+    try {
+        let user = await User.findById(req.user._id);
+        if (!user) return res.status(400).send("Can't find User!");
+
+        let friendObj = await Friend.findOne({ user: user._id });
+        friendObj.friends.push(user._id);
+
+        let arrayofposts = await Post.find({
+            postedBy: { $in: friendObj.friends },
+        }).sort("-date");
+
+        res.send(arrayofposts);
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);

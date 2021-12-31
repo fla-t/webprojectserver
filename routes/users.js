@@ -89,7 +89,7 @@ router.post("/signin", async (req, res, next) => {
     }
 });
 
-router.get("/:id", auth, async (req, res) => {
+router.get("/:id", async (req, res) => {
     try {
         let user = await User.findById(req.params.id);
         if (!user) return res.status(404).send("User Doesn't Exists");
@@ -111,7 +111,6 @@ router.get("/:id", auth, async (req, res) => {
 
 router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
     try {
-        console.log(req.user);
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
 

@@ -7,6 +7,7 @@ const LikeSchema = new mongoose.Schema({
     },
     likedBy: {
         type: [mongoose.Schema.Types.ObjectId],
+        ref: "User",
     },
 });
 

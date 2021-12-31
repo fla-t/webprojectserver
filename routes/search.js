@@ -6,12 +6,11 @@ const auth = require("../middleware/auth");
 
 const { User } = require("../models/user");
 
-function escapeRegex(text) {
-    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-}
-
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
     try {
+        function escapeRegex(text) {
+            return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+        }
         const regex = new RegExp(escapeRegex(req.body.name), "gi");
         let users = await User.find(
             { firstname: regex },
@@ -19,6 +18,7 @@ router.get("/", async (req, res) => {
                 if (err) {
                     console.log(err);
                 } else {
+                    usersfound = usersfound.map((user) => user._id);
                     res.status(200).send(usersfound);
                 }
             }
