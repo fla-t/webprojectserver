@@ -17,19 +17,49 @@ router.get("/check/:id", auth, async (req, res) => {
         if (!usertocheck)
             return res.status(400).send("Can't find the second user");
 
-        let friendsCheck = await Friend.findOne({
+        let friendCheck = await Friend.findOne({
             $and: [
                 { user: currentuser._id },
                 { friends: { $in: usertocheck._id } },
             ],
         });
 
-        if (friendsCheck) return res.status(200).send();
-        else return res.status(400).send();
+        let friendpending = await Friend.findOne({
+            $and: [
+                { user: currentuser._id },
+                { pending: { $in: usertocheck._id } },
+            ],
+        });
 
-        // if (friends.friends.include(usertocheck._id))
-        //     return res.status(200).send();
-        // else return res.status(400).send();
+        let friendrequested = await Friend.findOne({
+            $and: [
+                { user: usertocheck._id },
+                { pending: { $in: currentuser._id } },
+            ],
+        });
+
+        if (friendCheck && !friendpending && !friendrequested) {
+            return res.status(200).send({ state: "friend" });
+        } else if (friendpending) {
+            return res.status(200).send({ state: "pending" });
+        } else if (friendrequested) {
+            return res.status(200).send({ state: "requested" });
+        } else {
+            return res.status(400).send({ state: "notfriend" });
+        }
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.get("/pending", auth, async (req, res) => {
+    try {
+        let currentuser = await User.findById(req.user._id);
+        if (!currentuser) return res.status(400).send("Can't find User!");
+
+        let friendObj = await Friend.findOne({ user: currentuser._id });
+        res.status(200).send(friendObj.pending);
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);
@@ -71,7 +101,7 @@ router.get("/confirm/:id/", auth, async (req, res) => {
             }
         );
 
-        res.status(200).send();
+        res.status(200).send({ state: "friended" });
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);
@@ -100,6 +130,33 @@ router.get("/request/:id", auth, async (req, res) => {
         );
 
         res.status(200).send();
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.get("/reject/:id", auth, async (req, res) => {
+    try {
+        let user = await User.findById(req.user._id);
+        if (!user) return res.status(400).send("Can't find User!");
+
+        let friendObj = await Friend.findOne({ user: user._id });
+        if (!friendObj) return res.status(400).send("User not found!");
+
+        if (friendObj.pending.includes(req.params.id)) {
+            friendObj = await Friend.findOneAndUpdate(
+                { user: user._id },
+                {
+                    $pull: {
+                        pending: req.params.id,
+                    },
+                },
+                { new: true }
+            );
+        }
+
+        res.send(friendObj.pending);
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);
