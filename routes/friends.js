@@ -17,6 +17,10 @@ router.get("/check/:id", auth, async (req, res) => {
         if (!usertocheck)
             return res.status(400).send("Can't find the second user");
 
+        if (currentuser._id == usertocheck._id) {
+            return res.status(200).send({ state: "yourself" });
+        }
+
         let friendCheck = await Friend.findOne({
             $and: [
                 { user: currentuser._id },
@@ -45,7 +49,7 @@ router.get("/check/:id", auth, async (req, res) => {
         } else if (friendrequested) {
             return res.status(200).send({ state: "requested" });
         } else {
-            return res.status(400).send({ state: "notfriend" });
+            return res.status(200).send({ state: "notfriend" });
         }
     } catch (err) {
         console.log(err.message);
