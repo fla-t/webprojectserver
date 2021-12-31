@@ -17,7 +17,7 @@ router.get("/check/:id", auth, async (req, res) => {
         if (!usertocheck)
             return res.status(400).send("Can't find the second user");
 
-        if (currentuser._id == usertocheck._id) {
+        if (currentuser.id == usertocheck.id) {
             return res.status(200).send({ state: "yourself" });
         }
 
