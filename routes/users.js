@@ -171,7 +171,7 @@ router.post("/googleauth", async (req, res, next) => {
 
         let user = await User.findOne({ email: req.body.email });
         if (!user) {
-            let user = new User({
+            user = new User({
                 googleId: req.body.googleId,
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
