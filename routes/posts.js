@@ -3,6 +3,8 @@ var router = express.Router();
 
 const _ = require("lodash");
 const auth = require("../middleware/auth");
+const fs = require("fs");
+const path = require("path");
 
 const upload = require("../middleware/multer")("../public/uploads/pictures/");
 
@@ -10,7 +12,7 @@ const { User } = require("../models/user");
 const { Post, validate } = require("../models/post");
 const { Like } = require("../models/like");
 
-router.post("/", auth, async (req, res) => {
+router.post("/", [auth, upload.array("photos", 10)], async (req, res) => {
     try {
         const token = req.header("x-auth-token");
 
@@ -19,12 +21,14 @@ router.post("/", auth, async (req, res) => {
 
         req.body.postedBy = req.user._id;
 
-        const { error } = validate(req.body);
+        const { error } = validate(
+            _.pick(req.body, ["text", "images", "postedBy", "date"])
+        );
         if (error) return res.status(400).send(error.details[0].message);
 
         let post = new Post({
             text: req.body.text,
-            images: req.body.images,
+            images: req.files.map((file) => file.filename),
             postedBy: req.body.postedBy,
             date: new Date(),
         });
@@ -56,7 +60,7 @@ router.get("/:id", auth, async (req, res, next) => {
     }
 });
 
-router.put("/:id", [auth, upload.array("post")], async (req, res) => {
+router.put("/:id", [auth, upload.array("photos")], async (req, res) => {
     try {
         const token = req.header("x-auth-token");
 
@@ -74,14 +78,31 @@ router.put("/:id", [auth, upload.array("post")], async (req, res) => {
                 .status(400)
                 .send("You don't have permission to do that.");
 
-        post = await Post.findByIdAndUpdate(post.id, {
-            $set: {
-                text: req.body.text,
-                images: req.files,
-                postedBy: req.body.postedBy,
-                date: new Date(),
+        if (req.files) {
+            if (post.images) {
+                post.images.forEach((img) =>
+                    fs.unlinkSync(
+                        path.join(
+                            __dirname,
+                            `../public/uploads/pictures/${img}`
+                        )
+                    )
+                );
+            }
+        }
+
+        post = await Post.findByIdAndUpdate(
+            post.id,
+            {
+                $set: {
+                    text: req.body.text,
+                    images: req.files.map((file) => file.filename),
+                    postedBy: req.body.postedBy,
+                    date: new Date(),
+                },
             },
-        });
+            { new: true }
+        );
 
         res.send(post);
     } catch (err) {

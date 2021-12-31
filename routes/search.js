@@ -12,14 +12,14 @@ function escapeRegex(text) {
 
 router.get("/", async (req, res) => {
     try {
-        const regex = new RegExp(escapeRegex("Naveed"), "gi");
+        const regex = new RegExp(escapeRegex(req.body.name), "gi");
         let users = await User.find(
             { firstname: regex },
             function (err, usersfound) {
                 if (err) {
                     console.log(err);
                 } else {
-                    console.log(usersfound);
+                    res.status(200).send(usersfound);
                 }
             }
         )
@@ -27,21 +27,6 @@ router.get("/", async (req, res) => {
             .catch(function (err) {
                 console.log(err);
             });
-
-        // const usersarray = await User.fuzzySearch("naveed");
-
-        // const usersarray = await User.find({
-        //     $expr: {
-        //         $regexMatch: {
-        //             input: { $concat: ["$first", " ", "$last"] },
-        //             regex: "req.body.name", //Your text search here
-        //             options: "i",
-        //         },
-        //     },
-        // });
-
-        // console.log(usersarray);
-        res.status(200).send(usersarray);
     } catch (err) {
         console.log(err.message);
         res.status(500).send(err.message);

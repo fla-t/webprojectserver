@@ -2,7 +2,6 @@ const Joi = require("joi");
 const mongoose = require("mongoose");
 const config = require("config");
 const jwt = require("jsonwebtoken");
-const mongoose_fuzzy_searching = require("mongoose-fuzzy-searching");
 
 const userSchema = new mongoose.Schema({
     firstname: {
@@ -49,10 +48,6 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.generateAuthToken = function () {
     return jwt.sign({ _id: this._id }, config.get("jwtPrivateKey"));
 };
-
-// userSchema.plugin(mongoose_fuzzy_searching, {
-//     fields: ["firstName", "lastName"],
-// });
 
 const User = mongoose.model("User", userSchema);
 

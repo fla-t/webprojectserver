@@ -111,6 +111,7 @@ router.get("/:id", auth, async (req, res) => {
 
 router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
     try {
+        console.log(req.user);
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
 
@@ -135,7 +136,7 @@ router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,
                     dob: req.body.dob,
-                    email: req.body.email,
+                    //email: req.body.email,
                     bio: req.body.bio,
                     avatar: req.file ? req.file.filename : user.avatar,
                 },
