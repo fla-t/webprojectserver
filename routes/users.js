@@ -11,7 +11,12 @@ const upload = require("../middleware/multer")(
 );
 
 const { Friend } = require("../models/friend");
-const { User, validate, validateCreds } = require("../models/user");
+const {
+    User,
+    validate,
+    validateCreds,
+    validateExceptPassword,
+} = require("../models/user");
 
 router.post("/signup", async (req, res, next) => {
     try {
@@ -36,6 +41,7 @@ router.post("/signup", async (req, res, next) => {
         let friend = new Friend({
             user: user.id,
             friends: [],
+            pending: [],
         });
 
         friend.save();
@@ -66,7 +72,15 @@ router.post("/signin", async (req, res, next) => {
 
         const token = {
             token: user.generateAuthToken(),
-            user: _.pick(user, ["id", "firstname", "lastname", "email", "dob"]),
+            user: _.pick(user, [
+                "id",
+                "firstname",
+                "lastname",
+                "email",
+                "dob",
+                "avatar",
+                "bio",
+            ]),
         };
         res.send(token);
     } catch (err) {
@@ -86,6 +100,7 @@ router.get("/:id", auth, async (req, res) => {
             "email",
             "dob",
             "avatar",
+            "bio",
         ]);
         res.send(user);
     } catch (err) {
@@ -99,13 +114,10 @@ router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
         let user = await User.findById(req.user._id);
         if (!user) return res.status(400).send("Can't find User!");
 
-        const { error } = validate(req.body);
+        const { error } = validateExceptPassword(req.body);
         if (error) return res.status(400).send(error.details[0].message);
 
-        const salt = await bcrypt.genSalt(10);
-        req.body.password = await bcrypt.hash(req.body.password, salt);
-
-        if (req.file !== null) {
+        if (req.file) {
             if (user.avatar) {
                 fs.unlinkSync(
                     path.join(
@@ -116,8 +128,8 @@ router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
             }
         }
 
-        user = await User.findOneAndUpdate(
-            { id: user._id },
+        user = await User.findByIdAndUpdate(
+            user.id,
             {
                 $set: {
                     firstname: req.body.firstname,
@@ -125,7 +137,7 @@ router.put("/edit", [auth, upload.single("avatar")], async (req, res) => {
                     dob: req.body.dob,
                     email: req.body.email,
                     bio: req.body.bio,
-                    avatar: req.file ? req.file.filename : null,
+                    avatar: req.file ? req.file.filename : user.avatar,
                 },
             },
             { new: true }

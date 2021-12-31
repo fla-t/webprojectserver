@@ -55,8 +55,8 @@ router.put("/:id", auth, async (req, res) => {
                 .status(400)
                 .send("You don't have permission to do that.");
 
-        comment = await Comment.findOneAndUpdate(
-            { id: comment.id },
+        comment = await Comment.findByAndUpdate(
+            comment.id,
             {
                 $set: {
                     text: req.body.text,
@@ -64,7 +64,8 @@ router.put("/:id", auth, async (req, res) => {
                     postedBy: req.body.postedBy,
                     date: new Date(),
                 },
-            }
+            },
+            { new: true }
         );
 
         res.send(comment);
@@ -87,7 +88,7 @@ router.delete("/:id", auth, async (req, res) => {
                 .status(400)
                 .send("You don't have permission to do that.");
 
-        comment = await Comment.findOneAndDelete({ id: comment.id });
+        comment = await Comment.findByIdAndDelete(comment.id);
 
         res.status(200).send();
     } catch (err) {

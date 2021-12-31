@@ -16,14 +16,11 @@ router.get("/like/:id", auth, async (req, res) => {
         let post = await Post.findById(req.params.id);
         if (!post) return res.status(400).send("Post not found!");
 
-        let like = await Like.findOneAndUpdate(
-            { post: post._id },
-            {
-                $addToSet: {
-                    likedBy: req.user._id,
-                },
-            }
-        );
+        let like = await Like.findByIdAndUpdate(post._id, {
+            $addToSet: {
+                likedBy: req.user._id,
+            },
+        });
 
         res.status(200).send();
     } catch (err) {
@@ -40,14 +37,11 @@ router.get("/unlike/:id", auth, async (req, res) => {
         let post = await Post.findById(req.params.id);
         if (!post) return res.status(400).send("Post not found!");
 
-        like = await Like.findOneAndUpdate(
-            { post: post.id },
-            {
-                $pull: {
-                    likedBy: req.user._id,
-                },
-            }
-        );
+        like = await Like.findByIdAndUpdate(post.id, {
+            $pull: {
+                likedBy: req.user._id,
+            },
+        });
 
         res.status(200).send();
     } catch (err) {

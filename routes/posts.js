@@ -4,6 +4,8 @@ var router = express.Router();
 const _ = require("lodash");
 const auth = require("../middleware/auth");
 
+const upload = require("../middleware/multer")("../public/uploads/pictures/");
+
 const { User } = require("../models/user");
 const { Post, validate } = require("../models/post");
 const { Like } = require("../models/like");
@@ -54,7 +56,7 @@ router.get("/:id", auth, async (req, res, next) => {
     }
 });
 
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", [auth, upload.array("post")], async (req, res) => {
     try {
         const token = req.header("x-auth-token");
 
@@ -72,17 +74,14 @@ router.put("/:id", auth, async (req, res) => {
                 .status(400)
                 .send("You don't have permission to do that.");
 
-        post = await Post.findOneAndUpdate(
-            { id: post.id },
-            {
-                $set: {
-                    text: req.body.text,
-                    images: req.body.images,
-                    postedBy: req.body.postedBy,
-                    date: new Date(),
-                },
-            }
-        );
+        post = await Post.findByIdAndUpdate(post.id, {
+            $set: {
+                text: req.body.text,
+                images: req.files,
+                postedBy: req.body.postedBy,
+                date: new Date(),
+            },
+        });
 
         res.send(post);
     } catch (err) {

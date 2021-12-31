@@ -10,6 +10,10 @@ const FriendSchema = new mongoose.Schema({
         type: [mongoose.Schema.Types.ObjectId],
         required: true,
     },
+    pending: {
+        type: [mongoose.Schema.Types.ObjectId],
+        required: true,
+    },
 });
 
 const Friend = mongoose.model("Friend", FriendSchema);

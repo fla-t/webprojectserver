@@ -2,6 +2,7 @@ const Joi = require("joi");
 const mongoose = require("mongoose");
 const config = require("config");
 const jwt = require("jsonwebtoken");
+const mongoose_fuzzy_searching = require("mongoose-fuzzy-searching");
 
 const userSchema = new mongoose.Schema({
     firstname: {
@@ -41,13 +42,17 @@ const userSchema = new mongoose.Schema({
     bio: {
         type: String,
         required: false,
-        Default: " ",
+        Default: null,
     },
 });
 
 userSchema.methods.generateAuthToken = function () {
     return jwt.sign({ _id: this._id }, config.get("jwtPrivateKey"));
 };
+
+// userSchema.plugin(mongoose_fuzzy_searching, {
+//     fields: ["firstName", "lastName"],
+// });
 
 const User = mongoose.model("User", userSchema);
 
@@ -58,6 +63,18 @@ function validateUser(user) {
         dob: Joi.date().required(),
         email: Joi.string().min(5).max(255).required().email(),
         password: Joi.string().min(5).max(255).required(),
+        bio: Joi.string().min(0).max(255),
+        // avatar: Joi.string().required(),
+    });
+    return schema.validate(user);
+}
+
+function validateUserExceptPassword(user) {
+    const schema = Joi.object({
+        firstname: Joi.string().min(5).max(50).required(),
+        lastname: Joi.string().min(5).max(50).required(),
+        dob: Joi.date().required(),
+        email: Joi.string().min(5).max(255).required().email(),
         bio: Joi.string().min(0).max(255),
         // avatar: Joi.string().required(),
     });
@@ -76,3 +93,4 @@ module.exports.User = User;
 module.exports.userSchema = userSchema;
 module.exports.validate = validateUser;
 module.exports.validateCreds = validateUserCreds;
+module.exports.validateExceptPassword = validateUserExceptPassword;
